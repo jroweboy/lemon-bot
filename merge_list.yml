@@ -1,0 +1,28 @@
+tracking_repository:
+    - name: "tracking"
+      url: "https://github.com/citra-emu/citra"
+push_repository:
+    - name: "origin"
+      url: "git@github.com:jroweboy/lemon"
+
+other_remotes:
+    - name: jroweboy
+      url: "https://github.com/jroweboy/citra"
+    - name: lemon
+      url: "https://github.com/jroweboy/lemon"
+
+merge_list:
+    - remote: jroweboy
+      name: squirrel
+      required: true
+      # TODO: add support to squirrel for mingw64 builds
+    - pr_id: 2042
+      branch: dynarmic
+      required: true
+    - pr_id: 1995
+      branch: inputcore
+      required: true
+    - pr_id: 1753
+      branch: framelayouts
+    - pr_id: 2024
+      branch: update-boss-code
