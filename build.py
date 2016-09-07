@@ -74,15 +74,15 @@ class MergeBot():
     def _check_remotes_for_updates(self):
         for branch in self._branches:
             if branch["remote"]:
-                _git("fetch", branch["remote"], branch["name"], cwd=self.repo_path)
-                _git("branch", branch["name"], "/".join([branch["remote"],branch["name"]]), cwd=self.repo_path)
+                _git("fetch", branch["remote"], ":".join([branch["name"], branch["name"]]), cwd=self.repo_path)
+                # _git("branch", branch["name"], "/".join([branch["remote"],branch["name"]]), cwd=self.repo_path)
             else:
                 _git("fetch", self.tracking_repo["name"], "pull/{0}/head:{1}".format(branch["pr_id"], branch["name"]), cwd=self.repo_path)
 
     def merge_branches(self):
         branch_name = ",".join((branch["name"] for branch in self._branches))
         # delete the previous branch if one exists
-        _git("branch", "-d", branch_name, cwd=self.repo_path)
+        _git("branch", "-D", branch_name, cwd=self.repo_path)
         # checkout a new branch based off master
         _git("checkout", "master", cwd=self.repo_path)
         _git("checkout", "-b", branch_name, cwd=self.repo_path)
@@ -90,11 +90,13 @@ class MergeBot():
         # merge them all in
         for branch in self._branches:
             retval = _git("merge", branch["name"], cwd=self.repo_path)
-            if retval != 0 and branch["required"]:
-                logger.error("ABORT! Required branch ({0}, {1}) failed to merge".format(branch["pr_id"] or branch["remote"], branch["name"]))
-                return False
-            else:
-                logger.warn("Non required branch ({0}, {1}) failed to merge.".format(branch["pr_id"] or branch["remote"], branch["name"]))
+            if retval != 0:
+                _git("merge", "--abort", cwd=self.repo_path)
+                if branch["required"]:
+                    logger.error("ABORT! Required branch ({0}, {1}) failed to merge".format(branch["pr_id"] or branch["remote"], branch["name"]))
+                    return False
+                else:
+                    logger.warn("Non required branch ({0}, {1}) failed to merge.".format(branch["pr_id"] or branch["remote"], branch["name"]))
         return branch_name
 
     def push(self, branch_name):
@@ -102,16 +104,16 @@ class MergeBot():
 
 def _git(*args, cwd=None):
     command = ["git"] + list(args)
-    logger.debug("git command: " + " ".join(command))
+    logger.debug(" git command: " + " ".join(command))
     if not cwd:
         logger.warn("Cowardly refusing to call the previous git command without a working directory")
         return
     p = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     if stdout:
-        logger.debug("stdout: " + str(stdout))
+        logger.debug("  stdout: " + str(stdout))
     if stderr:
-        logger.debug("stderr: " + str(stderr))
+        logger.debug("  stderr: " + str(stderr))
     return p.returncode
 
 # Reloading config
