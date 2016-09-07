@@ -2,7 +2,7 @@ tracking_repository:
     - name: "tracking"
       url: "https://github.com/citra-emu/citra"
 push_repository:
-    - name: "origin"
+    - name: "push"
       url: "git@github.com:jroweboy/lemon"
 
 other_remotes:
@@ -13,7 +13,7 @@ other_remotes:
 
 merge_list:
     - remote: jroweboy
-      name: squirrel
+      branch: squirrel
       required: true
       # TODO: add support to squirrel for mingw64 builds
     - pr_id: 2042

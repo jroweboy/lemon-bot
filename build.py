@@ -23,18 +23,23 @@ class MergeBot():
     def __init__(self, config_file="merge_list.yml"):
         self.base_dir = os.path.dirname(__file__)
         self._tracking_dirname = "tracking_repo"
-        self._config_file = config_file
+        self._config_file = os.path.join(self.base_dir, config_file)
         self._reload_config()
 
     def _reload_config(self):
-        yml = yaml.safe_load(self._config_file)
+        yml = None
+        with open(self._config_file) as f:
+            yml = yaml.safe_load(f)
+        if not yml:
+            logger.error("Failed to open and parse the yaml file")
+            return False
 
-        self.tracking_repo = {"name": yml["tracking_repository"]["name"], "url": yml["tracking_repository"]["url"]}
+        self.tracking_repo = {"name": yml["tracking_repository"][0]["name"], "url": yml["tracking_repository"][0]["url"]}
         self.repo_path = os.path.join(self.base_dir, self._tracking_dirname)
         if not os.path.exists(self.repo_path):
             _git("clone", self.tracking_repo["url"], self._tracking_dirname, cwd=self.base_dir)
         _git("remote", "add", self.tracking_repo["name"], self.tracking_repo["url"], cwd=self.repo_path)
-        self.push_repo = {"name": yml["push_repository"]["name"], "url": yml["push_repository"]["url"]}
+        self.push_repo = {"name": yml["push_repository"][0]["name"], "url": yml["push_repository"][0]["url"]}
         _git("remote", "add", self.push_repo["name"], self.push_repo["url"], cwd=self.repo_path)
 
         for remote in yml["other_remotes"]:
@@ -43,9 +48,8 @@ class MergeBot():
         # update to the latest master
         _git("checkout", "master", cwd=self.repo_path)
         _git("pull", self.tracking_repo["name"], "master", cwd=self.repo_path)
-
         self._branches = [{
-            "name": branch.get("name"),
+            "name": branch.get("branch"),
             # TODO: make this a proper class. There are two kinds of branches here.
             # One is a remote/name branch the other is a fetch pull/ID/HEAD:name
             # Can easily be two different classes with the same interface
@@ -53,7 +57,8 @@ class MergeBot():
             "remote": branch.get("remote"),
             "required": branch.get("required", False),
         } for branch in yml["merge_list"]]
-        logger.info("Merging the following branches: " + ",".join((branch["name"] for branch in self._branches)))
+        branch_name = ",".join([branch["name"] for branch in self._branches]) or "no branches?"
+        logger.info("Merging the following branches: " + branch_name)
 
     def check_for_updates(self):
         self._check_self_for_updates()
@@ -69,10 +74,10 @@ class MergeBot():
     def _check_remotes_for_updates(self):
         for branch in self._branches:
             if branch["remote"]:
-                _git("fetch", branch["remote"], branch["name"])
-                _git("branch", branch["name"], "/".join(branch["remote"],branch["name"]), cwd=self.repo_path)
+                _git("fetch", branch["remote"], branch["name"], cwd=self.repo_path)
+                _git("branch", branch["name"], "/".join([branch["remote"],branch["name"]]), cwd=self.repo_path)
             else:
-                _git("fetch", "pull/{0}/HEAD:{1}".format(branch["pr_id"], branch["name"]), cwd=self.repo_path)
+                _git("fetch", self.tracking_repo["name"], "pull/{0}/head:{1}".format(branch["pr_id"], branch["name"]), cwd=self.repo_path)
 
     def merge_branches(self):
         branch_name = ",".join((branch["name"] for branch in self._branches))
@@ -83,13 +88,13 @@ class MergeBot():
         _git("checkout", "-b", branch_name, cwd=self.repo_path)
 
         # merge them all in
-        for branch in self._branches
-            retval = _git("merge", branch["name"])
+        for branch in self._branches:
+            retval = _git("merge", branch["name"], cwd=self.repo_path)
             if retval != 0 and branch["required"]:
-                log.error("ABORT! Required branch ({0}, {1}) failed to merge".format(branch["pr_id"] or branch["remote"], branch["name"]))
+                logger.error("ABORT! Required branch ({0}, {1}) failed to merge".format(branch["pr_id"] or branch["remote"], branch["name"]))
                 return False
             else:
-                log.warn("Non required branch ({0}, {1}) failed to merge.".format(branch["pr_id"] or branch["remote"], branch["name"]))
+                logger.warn("Non required branch ({0}, {1}) failed to merge.".format(branch["pr_id"] or branch["remote"], branch["name"]))
         return branch_name
 
     def push(self, branch_name):
@@ -104,9 +109,9 @@ def _git(*args, cwd=None):
     p = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     if stdout:
-        logger.debug("stdout: " + stdout)
+        logger.debug("stdout: " + str(stdout))
     if stderr:
-        logger.debug("stderr: " + stderr)
+        logger.debug("stderr: " + str(stderr))
     return p.returncode
 
 # Reloading config

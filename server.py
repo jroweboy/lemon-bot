@@ -4,6 +4,7 @@
 # TODO: make some of the logs visible to the website
 
 import sched
+import time
 from build import MergeBot
 
 s = sched.scheduler(time.time, time.sleep)
