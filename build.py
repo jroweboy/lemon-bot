@@ -37,7 +37,7 @@ class MergeBot():
         self.tracking_repo = {"name": yml["tracking_repository"][0]["name"], "url": yml["tracking_repository"][0]["url"]}
         self.repo_path = os.path.join(self.base_dir, self._tracking_dirname)
         if not os.path.exists(self.repo_path):
-            _git("clone", self.tracking_repo["url"], self._tracking_dirname, cwd=self.base_dir)
+            _git("clone", "--recursive", self.tracking_repo["url"], self._tracking_dirname, cwd=self.base_dir)
         _git("remote", "add", self.tracking_repo["name"], self.tracking_repo["url"], cwd=self.repo_path)
         self.push_repo = {"name": yml["push_repository"][0]["name"], "url": yml["push_repository"][0]["url"]}
         _git("remote", "add", self.push_repo["name"], self.push_repo["url"], cwd=self.repo_path)
@@ -47,7 +47,9 @@ class MergeBot():
 
         # update to the latest master
         _git("checkout", "master", cwd=self.repo_path)
-        _git("pull", self.tracking_repo["name"], "master", cwd=self.repo_path)
+        _git("fetch", self.tracking_repo["name"], "master", cwd=self.repo_path)
+        _git("reset", "--hard", self.tracking_repo["name"] + "/master", cwd=self.repo_path)
+
         self._branches = [{
             "name": branch.get("branch"),
             # TODO: make this a proper class. There are two kinds of branches here.
