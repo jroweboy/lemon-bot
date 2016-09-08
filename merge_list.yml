@@ -26,3 +26,7 @@ merge_list:
       branch: framelayouts
     - pr_id: 2024
       branch: update-boss-code
+    - pr_id: 2059
+      branch: tweak-audio-latency
+    - pr_id: 2057
+      branch: invalid-texture-check
