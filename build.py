@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import subprocess
 import yaml
 import os
@@ -124,6 +126,7 @@ def _git(*args, cwd=None):
     return p.returncode
 
 if __name__ == "__main__":
+    bot = MergeBot()
     bot.check_for_updates()
     branch = bot.merge_branches()
     if branch:
