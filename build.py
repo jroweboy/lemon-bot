@@ -104,8 +104,9 @@ class MergeBot():
                     # change the branch name to reflect it failed
                     new_branch_name.replace(branch["name"], branch["name"]+"(FAILED)")
         # checkout the new branch_name including failed
-        _git("branch", "-D", new_branch_name, cwd=self.repo_path)
-        _git("checkout", "-b", new_branch_name, cwd=self.repo_path)
+        if not branch_name == new_branch_name:
+            _git("checkout", "-b", new_branch_name, cwd=self.repo_path)
+            _git("branch", "-D", branch_name, cwd=self.repo_path)
         return new_branch_name
 
     def push(self, branch_name):
