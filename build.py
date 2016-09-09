@@ -88,7 +88,7 @@ class MergeBot():
         # checkout a new branch based off master
         _git("checkout", "master", cwd=self.repo_path)
         _git("checkout", "-b", branch_name, cwd=self.repo_path)
-
+        new_branch_name = branch_name
         # merge them all in
         for branch in self._branches:
             retval = _git("merge", branch["name"], cwd=self.repo_path)
@@ -99,7 +99,12 @@ class MergeBot():
                     return False
                 else:
                     logger.warn("Non required branch ({0}, {1}) failed to merge.".format(branch["pr_id"] or branch["remote"], branch["name"]))
-        return branch_name
+                    # change the branch name to reflect it failed
+                    new_branch_name.replace(branch["name"], branch["name"]+"(FAILED)")
+        # checkout the new branch_name including failed
+        _git("branch", "-D", new_branch_name, cwd=self.repo_path)
+        _git("checkout", "-b", new_branch_name, cwd=self.repo_path)
+        return new_branch_name
 
     def push(self, branch_name):
         _git("push", self.push_repo["name"], branch_name, cwd=self.repo_path)
@@ -117,6 +122,12 @@ def _git(*args, cwd=None):
     if stderr:
         logger.debug("  stderr: " + str(stderr))
     return p.returncode
+
+if __name__ == "__main__":
+    bot.check_for_updates()
+    branch = bot.merge_branches()
+    if branch:
+        bot.push(branch)
 
 # Reloading config
 # Git Command: git remote add tracking https://github.com/citra-emu/citra
