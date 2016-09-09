@@ -23,7 +23,7 @@ logger.addHandler(ch)
 
 class MergeBot():
     def __init__(self, config_file="merge_list.yml"):
-        self.base_dir = os.path.dirname(__file__)
+        self.base_dir = os.path.abspath(os.path.dirname(__file__))
         self._tracking_dirname = "tracking_repo"
         self._config_file = os.path.join(self.base_dir, config_file)
         self._reload_config()
