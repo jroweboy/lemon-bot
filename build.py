@@ -110,7 +110,8 @@ class MergeBot():
         return new_branch_name
 
     def push(self, branch_name):
-        _git("push", self.push_repo["name"], branch_name, cwd=self.repo_path)
+        _git("push", "--delete", self.push_repo["name"], branch_name, cwd=self.repo_path)
+        _git("push", "-f", self.push_repo["name"], branch_name, cwd=self.repo_path)
 
 def _git(*args, cwd=None):
     command = ["git"] + list(args)
