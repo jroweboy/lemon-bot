@@ -13,7 +13,7 @@ other_remotes:
 
 merge_list:
     - remote: jroweboy
-      branch: squirrel
+      branch: squirrel-mingw
       required: true
       # TODO: add support to squirrel for mingw64 builds
     - pr_id: 2042
