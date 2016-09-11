@@ -19,8 +19,8 @@ merge_list:
     - remote: jroweboy
       branch: squirrel-mingw
       required: true
-    - pr_id: 2042
-      branch: dynarmic
+    - remote: jroweboy
+      branch: dyn-sse3
       required: true
     - remote: jroweboy
       branch: inputcore
