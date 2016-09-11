@@ -12,6 +12,8 @@ other_remotes:
       url: "https://github.com/jroweboy/lemon"
     - name: jayfoxrox
       url: "https://github.com/jayfoxrox/citra"
+    - name: MerryMage
+      url: "https://github.com/MerryMage/citra"
 
 merge_list:
     - remote: jroweboy
@@ -35,3 +37,5 @@ merge_list:
       branch: tweak-audio-latency
     - pr_id: 2057
       branch: invalid-texture-check
+    - remote: MerryMage
+      branch: pipe3
