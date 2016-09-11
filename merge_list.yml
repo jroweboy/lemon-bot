@@ -12,15 +12,13 @@ other_remotes:
       url: "https://github.com/jroweboy/lemon"
     - name: jayfoxrox
       url: "https://github.com/jayfoxrox/citra"
-    - name: jroweboydynarmic
-      url: "https://github.com/jroweboy/dynarmic"
 
 merge_list:
     - remote: jroweboy
       branch: squirrel-mingw
       required: true
-    - remote: jroweboydynarmic
-      branch: lower-sse-reqs
+    - remote: jroweboy
+      branch: dynarmicsse2
       required: true
     - remote: jroweboy
       branch: inputcore
