@@ -17,8 +17,8 @@ merge_list:
     - remote: jroweboy
       branch: squirrel-mingw
       required: true
-    - remote: jroweboy
-      branch: dynarmicsse2
+    - pr_id: 2042
+      branch: dynarmic
       required: true
     - remote: jroweboy
       branch: inputcore
@@ -29,6 +29,8 @@ merge_list:
       branch: fix-batching
     - remote: jayfoxrox
       branch: gs-new-refactor
+    - pr_id: 2024
+      branch: update-boss-code
     - pr_id: 2059
       branch: tweak-audio-latency
     - pr_id: 2057
