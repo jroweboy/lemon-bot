@@ -19,7 +19,7 @@ merge_list:
     - remote: jroweboy
       branch: squirrel-mingw
       required: true
-    - pr_id: jroweboydynarmic
+    - remote: jroweboydynarmic
       branch: lower-sse-reqs
       required: true
     - remote: jroweboy
