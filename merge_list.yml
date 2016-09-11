@@ -20,7 +20,7 @@ merge_list:
     - pr_id: 2042
       branch: dynarmic
       required: true
-    - pr_id: jroweboy
+    - remote: jroweboy
       branch: inputcore
       required: true
     - pr_id: 1753
