@@ -10,12 +10,13 @@ other_remotes:
       url: "https://github.com/jroweboy/citra"
     - name: lemon
       url: "https://github.com/jroweboy/lemon"
+    - name: jayfoxrox
+      url: "https://github.com/jayfoxrox/citra"
 
 merge_list:
     - remote: jroweboy
       branch: squirrel-mingw
       required: true
-      # TODO: add support to squirrel for mingw64 builds
     - pr_id: 2042
       branch: dynarmic
       required: true
@@ -24,8 +25,10 @@ merge_list:
       required: true
     - pr_id: 1753
       branch: framelayouts
-    - pr_id: 2024
-      branch: update-boss-code
+    - remote: jayfoxrox
+      branch: fix-batching
+    - remote: jayfoxrox
+      branch: gs-new-refactor
     - pr_id: 2059
       branch: tweak-audio-latency
     - pr_id: 2057

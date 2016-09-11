@@ -65,10 +65,11 @@ class MergeBot():
         logger.info("Merging the following branches: " + branch_name)
 
     def check_for_updates(self):
+        count = 1
         self._check_self_for_updates()
         self._check_remotes_for_updates()
         # TODO Actually determine if we need to update
-        return True
+        return count > 0
 
     def _check_self_for_updates(self):
         _git("pull", "origin", "master", cwd=self.base_dir)
@@ -84,7 +85,8 @@ class MergeBot():
                 _git("fetch", self.tracking_repo["name"], "pull/{0}/head:{1}".format(branch["pr_id"], branch["name"]), cwd=self.repo_path)
 
     def merge_branches(self):
-        branch_name = ",".join((branch["name"] for branch in self._branches))
+        # branch_name = ",".join((branch["name"] for branch in self._branches))
+        branch_name = "bleeding_edge"
         # delete the previous branch if one exists
         _git("branch", "-D", branch_name, cwd=self.repo_path)
         # checkout a new branch based off master
@@ -102,11 +104,11 @@ class MergeBot():
                 else:
                     logger.warn("Non required branch ({0}, {1}) failed to merge.".format(branch["pr_id"] or branch["remote"], branch["name"]))
                     # change the branch name to reflect it failed
-                    new_branch_name.replace(branch["name"], branch["name"]+"(FAILED)")
+                    #new_branch_name.replace(branch["name"], branch["name"]+"(FAILED)")
         # checkout the new branch_name including failed
-        if not branch_name == new_branch_name:
-            _git("checkout", "-b", new_branch_name, cwd=self.repo_path)
-            _git("branch", "-D", branch_name, cwd=self.repo_path)
+#        if not branch_name == new_branch_name:
+#            _git("checkout", "-b", new_branch_name, cwd=self.repo_path)
+#            _git("branch", "-D", branch_name, cwd=self.repo_path)
         return new_branch_name
 
     def push(self, branch_name):
@@ -122,17 +124,18 @@ def _git(*args, cwd=None):
     p = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     if stdout:
-        logger.debug("  stdout: " + str(stdout))
+        logger.debug("  stdout: " + stdout.decode("utf-8"))
     if stderr:
-        logger.debug("  stderr: " + str(stderr))
+        logger.debug("  stderr: " + stderr.decode("utf-8"))
     return p.returncode
 
 if __name__ == "__main__":
     bot = MergeBot()
-    bot.check_for_updates()
-    branch = bot.merge_branches()
-    if branch:
-        bot.push(branch)
+    needs_update = bot.check_for_updates()
+    if needs_update:
+        branch = bot.merge_branches()
+        if branch:
+            bot.push(branch)
 
 # Reloading config
 # Git Command: git remote add tracking https://github.com/citra-emu/citra
