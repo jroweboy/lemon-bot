@@ -4,7 +4,7 @@ tracking_repository:
 
 push_repository:
     - name: "push"
-      url: "git@github.com:jroweboy/lemon"
+      url: "git@github.com:citra-emu/citra-bleeding-edge"
 
 other_remotes:
     - name: JamePeng
