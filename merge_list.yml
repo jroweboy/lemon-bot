@@ -1,21 +1,27 @@
 tracking_repository:
     - name: "tracking"
       url: "https://github.com/citra-emu/citra"
+
 push_repository:
     - name: "push"
-      url: "git@github.com:citra-emu/citra-bleeding-edge"
+      url: "git@github.com:jroweboy/lemon"
 
 other_remotes:
+    - name: JamePeng
+      url: "https://github.com/JamePeng/citra"
+    - name: JayFoxRox
+      url: "https://github.com/JayFoxRox/citra"
     - name: jroweboy
       url: "https://github.com/jroweboy/citra"
     - name: lemon
       url: "https://github.com/jroweboy/lemon"
-    - name: jayfoxrox
-      url: "https://github.com/jayfoxrox/citra"
+    - name: mailwl
+      url: "https://github.com/mailwl/citra"
     - name: MerryMage
       url: "https://github.com/MerryMage/citra"
-
+    
 merge_list:
+    # MANDOTORY
     - remote: jroweboy
       branch: squirrel-mingw
       required: true
@@ -25,17 +31,60 @@ merge_list:
     - remote: jroweboy
       branch: inputcore
       required: true
-    - pr_id: 1753
-      branch: framelayouts
-    - remote: jayfoxrox
-      branch: fix-batching
-    - remote: jayfoxrox
-      branch: gs-new-refactor
+      
+    # ADD-ON
+    # [JamePeng]
+    - pr_id: 1748
+      branch: contorl-archieve
+    - pr_id: 1567
+      branch: kernelsetstate
+    - pr_id: 1668
+      branch: update-apt-func2
     - pr_id: 2024
       branch: update-boss-code
-    - pr_id: 2059
-      branch: tweak-audio-latency
+    - remote: JamePeng
+      branch: errdisp
+      
+    # [JayFoxRox]
+    - remote: JayFoxRox
+      branch: fix-batching
+    - remote: JayFoxRox
+      branch: gs-new-refactor
+    
+    # [jroweboy]
+    - pr_id: 1753
+      branch: framelayouts
+      
+    # [j-selby]
     - pr_id: 2057
       branch: invalid-texture-check
+      
+    # [Lectem]
+    - pr_id: 2027
+      branch: ipcrefactor
+      
+    # [linkmauve]
+    - pr_id: 2064
+      branch: remove-readdir_r
+    - pr_id: 2065
+      branch: likely-unlikely
+      
+    # [mailwl]
+    - remote: mailwl
+      branch: service-ver
+      
+    # [makotech222]
+    - pr_id: 2063
+      branch: CheatsModule
+      
+    # [MerryMage]
     - remote: MerryMage
       branch: pipe3
+
+    # [ObsidianX]
+    - pr_id: 1696
+      branch: soc-getaddrinfo
+      
+    # [wwylele]
+    - pr_id: 1951
+      branch: motion-sensor
