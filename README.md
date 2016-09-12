@@ -1,11 +1,9 @@
-# lemon-bot
-Simple built bot for citra to make unofficial builds of popular branches
+# lemonbot
+Citra bot used for bleeding edge builds
 
 People with admin access can just edit the merge_list.yml to update
 what branches are going to be built on the next run. Currently without webhooks
 this bot just checks every 5 minutes for updates.
-
-Pull requests to update the merge list is not accepted at this time.
 
 Pull requests to fix issues with the bot are more than welcome.
 
@@ -14,7 +12,7 @@ Pull requests to fix issues with the bot are more than welcome.
 The bot essentially runs the following git commands to build a merge of the branches
 
 ```
-TODO:
+TODO: Fill this out. Theres a list of commands that runs at the end of build py but its a little old
 ```
 In the event of a failed merge, that branch is marked as failed merge and left out of the final build.
 
@@ -29,6 +27,14 @@ in order to increase their priority.
 # changes to these require a restart to take effect.
 tracking_repository: "https://github.com/foo/bar"
 push_repository: "https://github.com/whoknows/beta"
+
+tracking_remotes:
+    - name: baz
+      url: "https://github.com/baz/bar"
+      # use the scheduled checkup instead of webhook
+      web_hook: false
+    - name: contributor
+      url: "https://github.com/contributor/bar"
 
 merge_list:
     - pr_id: 1234
@@ -50,13 +56,6 @@ merge_list:
 enable_trusted_prs: true
 auto_remove_merged: true
 
-tracking_remotes:
-    - name: baz
-      url: "https://github.com/baz/bar"
-      # use the scheduled checkup instead of webhook
-      web_hook: false
-    - name: contributor
-      url: "https://github.com/contributor/bar"
 ```
 
 ## Future goals
