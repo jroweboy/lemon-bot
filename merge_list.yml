@@ -48,7 +48,7 @@ merge_list:
     # [JayFoxRox]
     - remote: JayFoxRox
       branch: fix-batching
-    - remote: jayfoxrox
+    - remote: JayFoxRox
       branch: gs-new-refactor
     
     # [jroweboy]
