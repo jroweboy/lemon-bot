@@ -23,13 +23,10 @@ other_remotes:
 merge_list:
     # MANDOTORY
     - remote: jroweboy
-      branch: squirrel-mingw
+      branch: rebased-installer-mingw
       required: true
     - remote: jroweboy
-      branch: dyn-sse3
-      required: true
-    - remote: jroweboy
-      branch: inputcore
+      branch: inputcore-framelayouts
       required: true
       
     # ADD-ON
@@ -49,11 +46,9 @@ merge_list:
     - remote: JayFoxRox
       branch: fix-batching
     - remote: JayFoxRox
-      branch: gs-new-refactor
+      branch: gs-new-refactor-format
     
     # [jroweboy]
-    - pr_id: 1753
-      branch: framelayouts
     - remote: jroweboy
       branch: lemon-tweaks
 
