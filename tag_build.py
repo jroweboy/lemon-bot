@@ -23,23 +23,39 @@ logger.addHandler(fh)
 logger.addHandler(eh)
 logger.addHandler(ch)
 
+# TODO: Change this to use a yaml config file instead
 # TODO: add multiple label support. Joining on a comma does an AND not an OR in github api, so we need to make multiple requests
-LABEL_TO_FETCH = 'bleeding-edge:merge'
+LABEL_TO_FETCH = 'pr:bleeding-edge-merge'
 
 GITHUB_API = 'https://api.github.com/repos'
+PULL_REPOS = ['https://github.com/citra-emu/citra-bleeding-edge', 'https://github.com/citra-emu/citra']
+MAIN_REPO = PULL_REPOS[1]
+PUSH_REPO = 'git@github.com:citra-emu/citra-bleeding-edge'
+# PUSH_REPO = 'git@github.com:jroweboy/lemon'
 
-class TagFetcher:
+class TagMergeBot:
     ''' Fetches all the pull requests on a repository and merges all the pull requests with a specified tag on them. '''
-    def __init__(self, repository):
-        self.repo = repository
-        path_split = urlparse(self.repo).path.split("/")
-        self.repo_owner = path_split[1]
-        self.repo_name = path_split[2]
-        self.previous_prs = []
-        self.current_prs = []
+    def __init__(self, main_repo, pull_repos, push_repo):
+        repositories = []
+        for repo in pull_repos:
+            path_split = urlparse(repo).path.split("/")
+            repository = {}
+            repository['url'] = repo
+            repository['owner'] = path_split[1]
+            repository['name'] = path_split[2]
+            repository['remote_name'] = '{owner}_{name}'.format(owner=repository['owner'], name=repository['name'])
+            repositories.append(repository)
+        self.repos = repositories
+        self.previous_prs = {}
+        self.current_prs = {}
+        self.base_path = os.path.abspath(os.path.dirname(__file__))
+        self.tracking_path = os.path.join(base_dir, 'tracking_repo')
+        self.branch_name = 'bleeding_edge'
+        self.main_repo = main_repo
+        self.push_repo = {"name": "push_remote", "url": push_repo}
 
     def load_last_prs(self):
-        self.previous_prs = []
+        self.previous_prs = {}
         if os.path.isfile('previous_run.json'):
             with open('previous_run.json') as infile:
                 self.previous_prs = json.load(infile)
@@ -49,29 +65,23 @@ class TagFetcher:
             json.dump(self.current_prs, outfile)
 
     def fetch_latest_prs(self):
-        # Fetch all the pull requests (up to 100... hopefully citra doesn't ever get more than that)
-        res = requests.get(GITHUB_API+'/{owner}/{repo}/issues?labels={labels}&per_page=100'.format(labels=LABEL_TO_FETCH, owner=self.repo_owner, repo=self.repo_name))
-        if res.status_code != 200:
-            logger.error("Could not retrive pull requests from github")
-            return False
-        issues = res.json()
-        self.current_prs = []
-        for issue in issues:
-            pr_response = requests.get(issue['pull_request']['url'])
+        # Fetch all the pull requests with the label (up to 100... hopefully citra doesn't ever get more than that)
+        self.current_prs = {}
+        for repo in self.repos:
+            self.current_prs[repo['remote_name']] = []
+            res = requests.get(GITHUB_API+'/{owner}/{repo}/issues?labels={labels}&per_page=100'.format(labels=LABEL_TO_FETCH, owner=repo['owner'], repo=repo['name']))
             if res.status_code != 200:
-                logger.warn("Couldn't fetch the PRs details for PR {pr}".format(pr=issue['']))
-                continue
-            pr = pr_response.json()
-            self.current_prs.append({"number": pr['number'], "commit": pr['head']['sha'], "ref": pr['head']['ref']})
+                logger.error("Could not retrive pull requests from github")
+                return False
+            issues = res.json()
+            for issue in issues:
+                pr_response = requests.get(issue['pull_request']['url'])
+                if res.status_code != 200:
+                    logger.warn("Couldn't fetch the PRs details for PR {pr}".format(pr=issue['']))
+                    continue
+                pr = pr_response.json()
+                self.current_prs[repo['remote_name']].append({"number": pr['number'], "commit": pr['head']['sha'], "ref": pr['head']['ref']})
         return True
-
-class MergeBot:
-    def __init__(self, pull_repo, push_repo):
-        self.base_path = os.path.abspath(os.path.dirname(__file__))
-        self.tracking_path = os.path.join(base_dir, 'tracking_repo')
-        self.pull_repo = {"name": "pull_remote", "url": pull_repo}
-        self.push_repo = {"name": "push_remote", "url": push_repo}
-        self.branch_name = 'bleeding_edge'
 
     def reclone(self):
         # TODO: Update the branches that need updating instead of wiping the folder and fresh cloning.
@@ -79,26 +89,30 @@ class MergeBot:
             logger.debug("Removing tracking_repo")
             shutil.rmtree(self.tracking_path, ignore_errors=False, onerror=handleRemoveReadonly)
         logger.debug("Cloning the repository")
-        _git("clone", "--recursive", self.pull_repo['url'], self.tracking_path, cwd=self.base_path)
+        _git("clone", "--recursive", self.main_repo, self.tracking_path, cwd=self.base_path)
         # setup the pull/push remotes
-        _git("remote", "add", self.pull_repo['name'], self.pull_repo['url'], cwd=self.tracking_path)
+        for repo in self.repos:
+            _git("remote", "add", repo['remote_name'], repo['url'], cwd=self.tracking_path)
         _git("remote", "add", self.push_repo['name'], self.push_repo['url'], cwd=self.tracking_path)
 
-    def pull_branch(self, pr):
-        _git("fetch", self.pull_repo['name'], "pull/{0}/head:{1}".format(pr['number'], pr['ref']), cwd=self.tracking_path)
+    def pull_branches(self):
+        for repo in self.repos:
+            for pr in self.current_prs[repo['remote_name']]:
+                _git("fetch", repo['remote_name'], "pull/{0}/head:{1}".format(pr['number'], pr['ref']), cwd=self.tracking_path)
 
-    def merge(self, prs):
+    def merge(self):
         # _git("branch", "-D", branch_name, cwd=self.repo_path)
         # _git("checkout", "master", cwd=self.repo_path)
         # checkout a new branch based off master
         _git("checkout", "-b", self.branch_name, cwd=self.tracking_path)
         total_failed = 0
-        for pr in prs:
-            retval, _ = _git("merge", pr["ref"], cwd=self.tracking_path)
-            if retval != 0:
-                _git("merge", "--abort", cwd=self.tracking_path)
-                logger.warn("Branch ({0}, {1}) failed to merge.".format(pr["ref"], pr["id"]))
-                total_failed += 1
+        for repo in self.repos:
+            for pr in self.current_prs[repo['remote_name']]:
+                retval, _ = _git("merge", pr["ref"], cwd=self.tracking_path)
+                if retval != 0:
+                    _git("merge", "--abort", cwd=self.tracking_path)
+                    logger.warn("Branch ({0}, {1}) failed to merge.".format(pr["ref"], pr["id"]))
+                    total_failed += 1
         return total_failed
 
     def push(self):
@@ -142,9 +156,7 @@ if __name__ == "__main__":
     else:
         logger.debug("=> No changes to the script repo were detected. Continuing.")
 
-    # repo = https://github.com/citra-emu/citra"
-    repo = "https://github.com/jroweboy/citra"
-    t = TagFetcher(repo)
+    t = TagMergeBot(MAIN_REPO, PULL_REPOS, PUSH_REPO)
     ret = t.fetch_latest_prs()
     if not ret:
         logger.error("Error occurred. Aborting early")
@@ -159,13 +171,12 @@ if __name__ == "__main__":
         sys.exit(0)
     # actually merge the branches and carry on.
     # TODO: Rework this whole workflow to be sane.
-    m = MergeBot(repo)
-    m.reclone()
-    for pr in t.current_prs:
-        m.pull_branch(pr)
-    failed = m.merge(t.current_prs)
-    logger.info("Number of failed merges")
-    m.push()
+    # m = MergeBot(PULL_REPOS, PUSH_REPO)
+    t.reclone()
+    t.pull_branches()
+    failed = t.merge()
+    logger.info("Number of failed merges: {failed}".format(failed=failed))
+    t.push()
 
     # save this runs information
     t.save_prs_to_file()
