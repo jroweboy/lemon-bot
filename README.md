@@ -1,6 +1,12 @@
 # lemonbot
 Citra bot used for bleeding edge builds
 
+# TODO:
+
+The following is information that is outdated and needs a rewrite. The new merge method is to use the github label feature.
+
+# Outdated information (about the old merge list merge idea)
+
 People with admin access can just edit the merge_list.yml to update
 what branches are going to be built on the next run. Currently without webhooks
 this bot just checks every 5 minutes for updates.
